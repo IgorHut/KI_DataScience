@@ -1,0 +1,26 @@
+---
+title: "Osnove programiranja u programskom jeziku R"
+author: "Igor Hut"
+date: "14.11.2016."
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Relacioni operatori
+
+Jednako          | Nije jednako 
+---------------- | -------------
+ ==              | !=
+ ```{r}          |
+ TRUE == TRUE    |
+ TRUE == FALSE   |
+ 1==1            |
+ 1==2            |
+ ```          
+        
+        
+        
+        |

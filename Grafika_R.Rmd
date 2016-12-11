@@ -1,0 +1,23 @@
+---
+title: "Vizualizacija u R-u"
+author: "Igor Hut"
+date: "November 28, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# `base` graficki sistem
+
+U svrhu grafickog prikaza podataka i rezultata analize R-u se koristi nekiliko razlicitih "grafickih sistema" tj. bibloteka funkcija. Osnovni graficki sistem je `base`, a pored njega je verovatno najcesce koriscen `ggplot2`. Pored njih se jos koriste i `lattice`, `grid` i `ggvis` koji u izvesnoj meri predstavlja evoluciju `ggplot2` sistema i takodje se oslanja na paradigmu "graficke gramatike" ("gramma of graphics"). `base` je podrazumevana biblioteka funkcija za graficki prikaz i ukljucena je u osnovnu instalaciju R-a. Relativno je jednostavna za koriscenje i narocito je korisna u ekploratornoj (istrazivackoj) fazi analize seta podataka, tj. u fazi upoznavanja sa datim skupom podataka.   
+
+## Osnovna funkcija - `plot`
+
+- `plot` je genericka funkcija, tj. rezultat njene primene zavisi od prirode podataka na koje se primenjuje
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```

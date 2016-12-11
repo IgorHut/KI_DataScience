@@ -1,0 +1,118 @@
+---
+title: "Inicijalna analiza podataka"
+author: "Igor Hut"
+date: "November 29, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+### Instaliranje odgovarajuceg R paketa i formiranje dataset-a sa podacima za pocetnu analizu; inicijalizacija ostalih R paketa koje cemo koristiti u analizi
+
+- Koristicemo "faraway" paket (<https://cran.r-project.org/web/packages/faraway/index.html>) i "pima" set podataka koji se nalazi u njemu.
+
+```{r}
+if(!require("faraway")){ 
+  install.packages("faraway") 
+  }
+
+library(faraway)
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(MASS)
+
+data(pima) # loads "pima"" dataset 
+```
+
+### Uvodni pregled seta podataka
+
+```{r}
+
+str (pima)
+head(pima)
+tail(pima)
+summary(pima) # u summary trazimo nepravilnosti i generalni opis podataka 
+```
+
+Kolona test uzima vrednosti 0 ili 1 u zavisnosti od toga da li data osoba pati od dijabetesa ili ne. Ovakve promenljive su kategoricke - u R-u se predstavljaju kao faktori. Kao sto se vidi u ovom slucaju kolona `test` nije tretirana kao kategoricka, a trebalo bi. Zato sami pravimo "faktor":
+```{r}
+pima$test <- factor(pima$test, labels = c("negative", "positive"))
+str(pima)
+summary(pima$test)
+```
+Nastavljamo sa daljom analizom seta:
+
+```{r}
+# kolona diastolic oznacava krvni pritisak koji ni u kom slucaju ne bi smeo da ima vrednost nula => greska je u unesenim podacima
+
+head(pima$diastolic, 100)
+head(sort(pima$diastolic), 100)
+
+#slicno, vrednost nula ne bi smele da imaju ni promenljive (kolone) glucose, insulin, bmi,..
+#svuda gde je nula stavljamo NA vrednosti
+
+pima$diastolic[pima$diastolic == 0]  <- NA
+pima$glucose[pima$glucose == 0] <- NA
+pima$triceps[pima$triceps == 0]  <- NA
+pima$insulin[pima$insulin == 0] <- NA
+pima$bmi[pima$bmi == 0] <- NA
+
+# proverimo kako sada izgleda nas set
+summary(pima)
+```
+
+### Osnovna analiza podataka pomocu grafickog predstavljanja
+
+- histogram za jednu od kolona:
+```{r}
+hist(pima$diastolic)
+
+truehist(pima$diastolic) # normalizovani histogram
+```
+
+- uzoracka "gustina" za istu promenljivu:
+```{r}
+plot(density(pima$diastolic,na.rm = TRUE))
+```
+
+- plotovanje sortiranih podataka:dobro za autlajere, proveru diskretnosti/neprekidnosti,...
+```{r}
+plot(sort(pima$diastolic),pch = ".")
+```
+
+- plotovanje zavisnosti izmedju promenljivih:
+```{r}
+plot(diabetes ~ diastolic, data = pima)
+```
+
+- kada plotujemo zavisnost neprekidne od kategoricke promenljive koriscenjem funkcije `plot()`, dobijaju se "boxplotovi" (`plot` je genericka funkcija cije ponasanje zavisi od konteksta):
+```{r}
+plot(diabetes ~ test, data = pima)
+```
+
+- medjusobna zavisnost svake dve kolone:
+
+```{r}
+pairs(pima)
+```
+
+- graficki prikaz korelacione matrice:
+
+```{r}
+
+#izdvajamo numericke podatke
+numericalVars <- select_if(pima, is.numeric)
+
+# Racunamo korelacionu matricu za numericke podatke, parametar use = use = "complete.obs" 
+# znaci da koristimo iskljucivo vrste (opservacije) bez "NA"
+corrMat <- cor(numericalVars, use = "complete.obs")
+
+# Generisemo "correlation ellipse plot"
+corrplot(corrMat, method = "ellipse")

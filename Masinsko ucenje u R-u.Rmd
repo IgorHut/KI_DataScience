@@ -1,0 +1,299 @@
+---
+title: "Masinsko ucenje u R-u"
+author: "Igor Hut"
+date: "December 5, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Uvodna analiza podataka
+
+- `data.frame` - primarna forma za smestanje, analizu i manipulaciju podacima 
+- Uvoz podataka - licna preporuka `readr` (Hadley Wickham) 
+- Prvi korak - upoznavanje sa podacima
+  - Dimenzije - broj promenljivih (features) i opservacija (observations)
+  - Ciscenje i uredjivanje podataka - licna preporuka `dplyr` i `tidyr`(Hadley Wickham)
+  - Vizualizacija - `base` i `ggplot2` (Hadley Wickham)
+
+### Primer inicijalne provere i analize podataka
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+# broj promenljivih i broj opservacija
+str(iris)
+dim(iris)
+
+# Nekoliko prvih i poslednjih vrsta iz `iris` baze
+head(iris)
+tail(iris)
+
+# sumarna statistika za podatke u `iris` bazi
+summary(iris)
+
+plot(iris) #rezultat ce biti isti kao da smo upotrebili `pairs` funkciju iz `base` bilioteke
+
+ggplot(iris, aes( x = Sepal.Width, y = Sepal.Length, col = Species)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+## Regresija, klasifikacija, klasterizacija
+
+**Linearna regresija - uvodni primer 1**
+
+```{r}
+
+# Ucitavamo "Wage" bazu iz "ISLR" paketa koja sadrzi neke opste podatke o radnicima u srednje-Atlanstkom regionu SAD i njihovim prihodima 
+library(ISLR)
+data("Wage")
+
+
+# Generisemo linearni model "lm_wage"
+
+lm_wage <- lm(wage ~ age, data = Wage)
+
+# ?lm - kako se funkcija "lm()" koristi
+
+# Definisemo data.frame sa novim vrednostima, koje nisu koriscenje za sintezu modela: "unseen" 
+unseen <- data.frame(age = 60)
+
+
+# Na osnovu modela "lm_wage" predvidjamo koliko iznosi plata 60-togodisnjeg radnika
+predict(lm_wage, unseen)
+```
+**Regresija - uvodni primer 2**
+
+```{r}
+
+# Broj pregleda vased LinkedIn profila u periodu od tri nedelje
+linkedin <- c(5, 7,  4,  9, 11, 10, 14, 17, 13, 11, 18, 17, 21, 21, 24, 23, 28, 35, 21, 27, 23)
+
+# Vektor koji sadrzi korespodentne dane: "dani"
+dani <- 1:21
+
+# Linearni model - broj pregleda po danima: linkedin_lm
+
+linkedin_lm <- lm(linkedin ~ dani)
+
+# Predvidjamo broj pregleda u sledeca tri dana: linkedin_pred
+buduci_dani <- data.frame(dani = 22:24)
+linkedin_pred <- predict(linkedin_lm, buduci_dani)
+
+# Plotujemo "istorijske" podatke i predvidjanje
+plot(linkedin ~ dani, xlim = c(1, 24))
+points(22:24, linkedin_pred, col = "red", pch = 16)
+```
+
+**Klasifikacija - uvodni primer** 
+
+Primer neadekvatnog klasifikatora - krajnje overfitovanje podataka iz trening seta!
+
+```{r}
+library(readr)
+if (!"emails" %in% ls()) {
+    emails <- read_csv("data/emails_small.csv")
+}
+
+# Proveravamo strukturu seta podataka
+str(emails)
+
+# Definisemo funkciju spam_classifier()
+# 1 - spam, 0 - ham
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(prediction)
+}
+
+# Primenimo nas klasifikator na kolonu "avg_capital_seq": "spam_pred""
+spam_pred <- spam_classifier(emails$avg_capital_seq)
+
+# Uporedimo "spam_pred" i  "emails$spam"
+spam_pred == emails$spam
+
+identical(spam_pred, as.numeric(emails$spam))
+```
+
+**Klasterovanje - uvodni primer**
+
+```{r}
+# Da bi smo obezbedili reproduktibilnost
+set.seed(1)
+
+# Proveravamo strukturu podataka
+str(iris)
+head(iris)
+
+# Delimo "iris" na dva seta: "my_iris" i "species""
+my_iris <- iris[-5]
+species <- iris$Species
+
+# Vrsimo k-means klasterizaciju za "my_iris", pretpostavljamo da postoje tri klase: "kmeans_iris"
+kmeans_iris <- kmeans(my_iris,3)
+
+# Poredimo dobijene klastere sa istinskim klasama (kategorijama)
+table(species, kmeans_iris$cluster)
+
+# Plotujemo "Petal.Width" vs "Petal.Length", bojimo po klasterima odn. postojecim kategorijama 
+par(mfrow = c(1,2))
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = kmeans_iris$cluster)
+title("k-means - klasteri")
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = iris$Species)
+title("Istinske klase")
+
+```
+## Ocena modela
+
+### Konfuziona matrica
+
+**Primer:**
+
+```{r}
+
+library(rpart)
+library(readr)
+
+# Import podataka
+if (!"titanic" %in% ls()) {
+    titanic <- read_csv("data/train.csv")
+}
+
+# Da obezbedimo reproduktibilnost
+set.seed(33)
+
+# Proveravamo strukturu data seta
+str(titanic)
+
+table(titanic$survived)
+
+# Odnos prezivelih i poginulih
+prop.table(table(titanic$survived))
+
+# Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu datih podataka:
+tree <- rpart(survived ~ ., data = titanic, method = "class")
+
+# Koristimo predict() funkciju da predvidimo klase
+pred <- predict(tree, newdata = titanic, type = "class")
+
+
+# Konstruisemo konfuzionu matricu koristeci "table()":
+table(titanic$survived, pred)
+
+# Overfitovano...
+
+
+#Isto to sa "pima" bazom podataka
+library(faraway)
+data(pima)
+
+set.seed(33)
+# Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu datih podataka:
+tree <- rpart(test ~ ., data = pima, method = "class")
+
+# oristimo predict() funkciju da predvidimo klase
+pred <- predict(tree, newdata = pima, type = "class")
+
+
+# Konstruisemo konfuzionu matricu koristeci "table()":
+conf <- table(pima$test, pred)
+conf
+```
+**Tacnost, preciznost, senzitivnost (recall), specificnost**
+
+```{r}
+
+# Formiramo TP, FN, FP i TN na osnovu "conf"
+
+TP <- conf[1,1]
+
+FP <- conf[2,1]
+
+FN <- conf[1,2]
+
+TN <- conf[2,2]
+
+
+# Tacnost (Accuracy)
+acc<-(TP + TN)/sum(conf)
+acc
+
+
+# Preciznost (Precision)
+prec <- TP/(TP + FP)
+prec
+
+# Senzitivnost (Sensitivity, Recall)
+sens <- TP/(TP + FN)
+sens
+
+# Specificnost (Specificity)
+spec <- TN/(TN + FP)
+spec
+```
+
+### Kvalitet regresije
+
+- Srednja kvadratna greska
+- U nasem slucaju mozemo smatrati da se poklapa sa standardnom devijacijom
+- `sqrt((1/nrow(truth)) * sum( (truth$col - pred)^2))`
+
+** Primer: **
+
+```{r}
+# Koristicemo "pima" bazu
+
+# Struktura seta podataka
+str(pima)
+
+# Multivarijabilna linearna regresija
+fit <- lm(diabetes ~ bmi + triceps + age + glucose + diastolic, data = pima)
+
+# Predvidjanje na osnovu modela: pred
+pred <- predict(fit)
+
+# RMSE na osnovu "pima$diabetes" (tacne vrednosti) i "pred" (vrednosti na osnovu modela)
+rmse <- sqrt(1/nrow(pima)*sum((pima$diabetes - pred) ^ 2))
+
+rmse
+```
+
+### Procena valjanosti klasterizacije WSS vs BSS
+
+```{r}
+# Da bi smo obezbedili reproduktibilnost
+set.seed(1)
+
+# Proveravamo strukturu podataka
+str(iris)
+head(iris)
+
+# Delimo "iris" na dva seta: "my_iris" i "species""
+my_iris <- iris[-5]
+species <- iris$Species
+
+# Vrsimo k-means klasterizaciju za "my_iris", pretpostavljamo da postoje tri klase: "kmeans_iris"
+kmeans_iris <- kmeans(my_iris,3)
+
+# Poredimo dobijene klastere sa istinskim klasama (kategorijama)
+table(species, kmeans_iris$cluster)
+
+# Plotujemo "Petal.Width" vs "Petal.Length", bojimo po klasterima odn. postojecim kategorijama 
+par(mfrow = c(1,2))
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = kmeans_iris$cluster)
+title("k-means - klasteri")
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = iris$Species)
+title("Istinske klase")
+
+kmeans_iris$tot.withinss/kmeans_iris$betweenss
+```
