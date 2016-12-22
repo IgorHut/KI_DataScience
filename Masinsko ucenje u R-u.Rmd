@@ -116,7 +116,7 @@ spam_classifier <- function(x){
   return(prediction)
 }
 
-# Primenimo nas klasifikator na kolonu "avg_capital_seq": "spam_pred""
+# Primenimo nas klasifikator na kolonu "avg_capital_seq": "spam_pred"
 spam_pred <- spam_classifier(emails$avg_capital_seq)
 
 # Uporedimo "spam_pred" i  "emails$spam"
@@ -155,14 +155,15 @@ title("Istinske klase")
 ```
 ## Ocena modela
 
-### Konfuziona matrica
+### Konfuziona matrica - Primeri
 
-**Primer:**
+**Primer 1:**
 
 ```{r}
 
 library(rpart)
 library(readr)
+library(purrr)
 
 # Import podataka
 if (!"titanic" %in% ls()) {
@@ -173,6 +174,15 @@ if (!"titanic" %in% ls()) {
 set.seed(33)
 
 # Proveravamo strukturu data seta
+str(titanic)
+
+# Koristicemo samo kolone 'survived', 'pclass', 'sex' i 'age'
+titanic <- titanic[, c(1, 2, 4, 5)]
+str(titanic)
+
+# Prve tri promenlive bi evidentno trebalo da budu tretirane kao kategoricke promenljive - faktori
+titanic[-4] <- map(titanic[-4], as.factor)
+
 str(titanic)
 
 table(titanic$survived)
@@ -188,11 +198,13 @@ pred <- predict(tree, newdata = titanic, type = "class")
 
 
 # Konstruisemo konfuzionu matricu koristeci "table()":
-table(titanic$survived, pred)
+conf_t <- table(titanic$survived, pred)
+conf_t
 
-# Overfitovano...
+```
 
-
+**Primer 2:**
+```{r}
 #Isto to sa "pima" bazom podataka
 library(faraway)
 data(pima)
@@ -206,26 +218,27 @@ pred <- predict(tree, newdata = pima, type = "class")
 
 
 # Konstruisemo konfuzionu matricu koristeci "table()":
-conf <- table(pima$test, pred)
-conf
+conf_p <- table(pima$test, pred)
+conf_p
 ```
-**Tacnost, preciznost, senzitivnost (recall), specificnost**
+#### Tacnost, preciznost, senzitivnost (recall), specificnost - Primer
 
 ```{r}
+# Izracunajmo parametre za ocenu valjanosti modela "tree" za "titanic" skup podataka
 
-# Formiramo TP, FN, FP i TN na osnovu "conf"
+# Formiramo TP, FN, FP i TN na osnovu "conf_t"
 
-TP <- conf[1,1]
+TP <- conf_t[1,1]
 
-FP <- conf[2,1]
+FP <- conf_t[2,1]
 
-FN <- conf[1,2]
+FN <- conf_t[1,2]
 
-TN <- conf[2,2]
+TN <- conf_t[2,2]
 
 
 # Tacnost (Accuracy)
-acc<-(TP + TN)/sum(conf)
+acc <- (TP + TN)/sum(conf_t)
 acc
 
 
@@ -242,13 +255,16 @@ spec <- TN/(TN + FP)
 spec
 ```
 
+**Zadatak za vezbanje na casu:**
+Izracunajte ove vrednosti za "tree" model generisan na osnovu "pima" seta podataka.
+
 ### Kvalitet regresije
 
 - Srednja kvadratna greska
 - U nasem slucaju mozemo smatrati da se poklapa sa standardnom devijacijom
 - `sqrt((1/nrow(truth)) * sum( (truth$col - pred)^2))`
 
-** Primer: **
+**Primer:**
 
 ```{r}
 # Koristicemo "pima" bazu
@@ -256,16 +272,27 @@ spec
 # Struktura seta podataka
 str(pima)
 
-# Multivarijabilna linearna regresija
-fit <- lm(diabetes ~ bmi + triceps + age + glucose + diastolic, data = pima)
+# Multivarijabilna linearna regresija - prostiji model (ukljucen manji broj promenljivih)
+fit_1 <- lm(diabetes ~ bmi + triceps + age + glucose, data = pima)
 
-# Predvidjanje na osnovu modela: pred
-pred <- predict(fit)
+# Predvidjanje na osnovu modela: pred_1
+pred_1 <- predict(fit_1)
 
-# RMSE na osnovu "pima$diabetes" (tacne vrednosti) i "pred" (vrednosti na osnovu modela)
-rmse <- sqrt(1/nrow(pima)*sum((pima$diabetes - pred) ^ 2))
+# RMSE na osnovu "pima$diabetes" (tacne vrednosti) i "pred_1" (vrednosti na osnovu modela fit_1)
+rmse_1 <- sqrt(1/nrow(pima)*sum((pima$diabetes - pred_1) ^ 2))
 
-rmse
+rmse_1
+
+# Multivarijabilna linearna regresija - kompleksniji model (ukljucen veci broj promenljivih)
+fit_2 <- lm(diabetes ~ bmi + triceps + age + glucose + diastolic + insulin + pregnant, data = pima)
+
+# Predvidjanje na osnovu modela: pred_1
+pred_2 <- predict(fit_2)
+
+# RMSE na osnovu "pima$diabetes" (tacne vrednosti) i "pred_1" (vrednosti na osnovu modela fit_1)
+rmse_2 <- sqrt(1/nrow(pima)*sum((pima$diabetes - pred_2) ^ 2))
+
+rmse_2
 ```
 
 ### Procena valjanosti klasterizacije WSS vs BSS
@@ -296,4 +323,208 @@ plot(Petal.Length ~ Petal.Width, data = my_iris, col = iris$Species)
 title("Istinske klase")
 
 kmeans_iris$tot.withinss/kmeans_iris$betweenss
+```
+
+### Trening set i test set 
+
+- Cilj implementacije algoritma **nadgledanog** ucenja jeste dobijanje "dovoljno" dobrog prediktivnog modela na osnovu raspolozivog seta podataka.  
+- Set podataka koji se koristi za formiranje modela - trening set
+- Set podatak koji se koristi za procenu valjanosti modela - test set
+- Trening set i test set ne smeju imati/deliti zajednicke elemente tj. opservacije
+- Samo testiranjem modela na podacima koji nisu korisceni za ucenje mozemo izvesti adekvatnu estimaciju ocena valjanosti modela - generalizacija.
+- Opste prihvacena praksa je da se rasploziv skup podataka podeli na sledeci nacin:
+    - Trening set 70% ili 75%
+    - Test set 30% ili 35%
+- Prilikom podele raspolozivog skupa podataka treba strogo voditi racuna da zastupljenost, odn. distribucija, klasa (ovo se odnosi na algoritme za klasifikaciju) bude slicna u trening i test setu
+    - ne bi smelo da se dogodi da jedan ili drugi set uopste ne sadrze ni jednu opservacuju koja pripada odredjenoj klasi
+- Dobra praksa je da se poredak opservacija randomizuje (slucajno odabrana permutacija) pre deljenja skupa podataka na trening i test set
+    - Ovo vazi i za klasifikaciju i za regresiju
+- Odabiranje (semplovanje) opservacija za trening i test set moze ponekad i znacajno uticati na procenjene vrednosti ocena valjanosti datog modela
+    - Da bi se ovaj efekat minimizovao koristi se **unakrsna validacija** (cross-validation)
+
+#### Primer
+
+```{r}
+# Koristicemo "titanic" set podataka formiran u jednom od prethodnih primera
+str(titanic)
+
+table(titanic$survived)
+
+# Odnos prezivelih i poginulih
+prop.table(table(titanic$survived))
+
+# Da bismo omogucili reproduktibilnost
+set.seed(33)
+
+# Prvo napravimo jednu slucajno odabranu permutaciju celog skupa podataka (dataset shuffle) 
+n <- nrow(titanic)
+shuffled <- titanic[sample(n),] #f-a 'sample' vrsi slucajno odabiranje elemenata zadatog vektora
+
+# Delimo skup podataka na trening i test set (70% i 30%)
+train_indicies <- 1:round(0.7 * n)
+train <- shuffled[train_indicies, ]
+test <- shuffled[-train_indicies, ]
+
+# Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu trening seta:
+tree <- rpart(survived ~ ., data = train, method = "class")
+
+# Koristeci dobijeni model "tree" vrsimo klasifikaciju podataka iz test seta:
+pred <- predict(tree, newdata = test, type = "class")
+
+# Racunamo matricu konfuzije
+conf_t <- table(test$survived, pred)
+
+# Prikaz matrice konfuzije
+conf_t
+
+# Formiramo TP, FN, FP i TN na osnovu "conf_t"
+
+TP <- conf_t[1,1]
+
+FP <- conf_t[2,1]
+
+FN <- conf_t[1,2]
+
+TN <- conf_t[2,2]
+
+
+# Tacnost (Accuracy)
+acc <- (TP + TN)/sum(conf_t)
+acc
+
+
+# Preciznost (Precision)
+prec <- TP/(TP + FP)
+prec
+
+# Senzitivnost (Sensitivity, Recall)
+sens <- TP/(TP + FN)
+sens
+
+# Specificnost (Specificity)
+spec <- TN/(TN + FP)
+spec
+```
+
+**Zadatak za vezbanje na casu:**
+Ponovite pokazanu proceduru koristeci "pima" skup podataka.
+
+### Upotreba unakrsne validacije (cross-validation)
+
+**Radi demonstracije cemo rucno formirati algroritam koji koristi unakrsnu validaciju za procenu tacnosti modela:**
+
+```{r}
+# Da bismo obezbedili reproduktibilnost
+set.seed(33)
+
+# Koristicemo prethodno formirani "shuffled" skup podataka
+
+# Inicijalizujemo vektor accs - popunjavamo nulama
+accs <- rep(0,9)
+
+
+# Treniramo model koristeci kros-validacione intervale vrednosti i vrsimo estimaciju tacnosti modela kao prosecne vrednosti tacnosti sracunatih unakrsnom validacijom
+for (i in 1:9) {
+  # Ovi indeksi ukazuju na trenutni interval test seta koji koristimo za treniranje modela
+    indices <- (((i - 1) * round((1/9)*nrow(shuffled))) + 1):((i*round((1/9) * nrow(shuffled))))
+  
+   # Iskljucujemo ove intervale iz trening seta
+   train <- shuffled[-indices,]
+  
+  # Ukljucimo ih u test set
+  test <- shuffled[indices,]
+  
+  # Treniramo model sa svakim od dobijenih trening setova po iteracijama
+  tree <- rpart(survived ~ ., train, method = "class")
+  
+  # Predvidjamo klase za tekuci test set u svakoj od iteracija
+  pred <- predict(tree, test, type = "class")
+  
+  # Formiramo odgovarajucu konfuzionu matricu
+  conf <- table(test$survived, pred)
+  
+  # Dodeljujemo vrednost za tacnost tekuceg modela i-tom indeksu u vektoru accs
+  accs[i] <- sum(diag(conf))/sum(conf)
+}
+
+# Srednja vrednost za accs
+mean(accs)
+```
+
+**Pitanje:**
+Recimo da primenjujemo unakrsnu validaciju na skupu podataka koji sadrzi 22680 opservacija. Zelite da vas trening set sadrzi 21420 unosa (opservacija). Koliko iteracija moze da sadrzi kros-validacioni algoritam? 
+
+
+### Bajas i varijansa (Bias and Variance)
+
+#### Primer
+
+Koristicemo *Spambase Data Set* koji mozete naci na <https://archive.ics.uci.edu/ml/datasets/Spambase>
+
+
+```{r}
+
+if (!"emails_full" %in% ls()) {
+    emails_full <- read.csv("data/spambase.data", header = FALSE)
+}
+
+# Proveravamo strukturu seta podataka
+str(emails_full)
+
+# Na osnovu dokumentacije...
+
+emails_full <- emails_full[, c(55, 58)]
+
+str(emails_full)
+
+colnames(emails_full) <-  c("avg_capital_seq", "spam")
+
+str(emails_full)
+
+emails_full$spam <- as.factor(emails_full$spam)
+
+str(emails_full)
+
+# Definisemo funkciju spam_classifier()
+# 1 - spam, 0 - ham
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(factor(prediction, levels = c("0","1")))
+}
+
+# Primenimo spam_classifier na emails_full: pred_full
+pred_full <- spam_classifier(emails_full$avg_capital_seq)
+
+# Konfuziona matrica za emails_full: conf_full
+conf_full <- table(emails_full$spam, pred_full)
+
+# Racunamo tacnost na osnovu conf_full: acc_full
+acc_full <- sum(diag(conf_full))/sum(conf_full)
+acc_full
+
+# Uproscen model za klasifikaciju 
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x <= 4] <- 0
+  return(factor(prediction, levels = c("0","1")))
+}
+
+# Tacnost predikcije sa uproscenim modelom za emails data set
+conf_small <- table(emails$spam, spam_classifier(emails$avg_capital_seq))
+acc_small <- sum(diag(conf_small)) / sum(conf_small)
+acc_small
+
+# Primenimo uprosceni model i na "emails_full" i sracunamo konfuzionu matricu
+conf_full <- table(emails_full$spam, spam_classifier(emails_full$avg_capital_seq))
+
+# Izracunamo tacnost
+acc_full <- sum(diag(conf_full)) / sum(conf_full)
+acc_full
 ```
