@@ -209,11 +209,16 @@ conf_t
 library(faraway)
 data(pima)
 
+head(pima)
+str(pima)
+
+# Da bismo obezbedili reproduktibilnost
 set.seed(33)
+
 # Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu datih podataka:
 tree <- rpart(test ~ ., data = pima, method = "class")
 
-# oristimo predict() funkciju da predvidimo klase
+# Koristimo predict() funkciju da predvidimo klase
 pred <- predict(tree, newdata = pima, type = "class")
 
 
@@ -228,13 +233,13 @@ conf_p
 
 # Formiramo TP, FN, FP i TN na osnovu "conf_t"
 
-TP <- conf_t[1,1]
+TP <- conf_t[2,2]
 
-FP <- conf_t[2,1]
+FP <- conf_t[1,2]
 
-FN <- conf_t[1,2]
+FN <- conf_t[2,1]
 
-TN <- conf_t[2,2]
+TN <- conf_t[1,1]
 
 
 # Tacnost (Accuracy)
@@ -295,11 +300,11 @@ rmse_2 <- sqrt(1/nrow(pima)*sum((pima$diabetes - pred_2) ^ 2))
 rmse_2
 ```
 
-### Procena valjanosti klasterizacije WSS vs BSS
+### Procena valjanosti klasterizacije: WSS vs BSS
 
 ```{r}
 # Da bi smo obezbedili reproduktibilnost
-set.seed(1)
+set.seed(33)
 
 # Proveravamo strukturu podataka
 str(iris)
@@ -309,7 +314,7 @@ head(iris)
 my_iris <- iris[-5]
 species <- iris$Species
 
-# Vrsimo k-means klasterizaciju za "my_iris", pretpostavljamo da postoje tri klase: "kmeans_iris"
+# Vrsimo k-means klasterizaciju za "my_iris" uz pretpostavku da postoje tri klase: "kmeans_iris"
 kmeans_iris <- kmeans(my_iris,3)
 
 # Poredimo dobijene klastere sa istinskim klasama (kategorijama)
@@ -328,8 +333,8 @@ kmeans_iris$tot.withinss/kmeans_iris$betweenss
 ### Trening set i test set 
 
 - Cilj implementacije algoritma **nadgledanog** ucenja jeste dobijanje "dovoljno" dobrog prediktivnog modela na osnovu raspolozivog seta podataka.  
-- Set podataka koji se koristi za formiranje modela - trening set
-- Set podatak koji se koristi za procenu valjanosti modela - test set
+- Set podataka koji se koristi za formiranje modela - **trening set**
+- Set podatak koji se koristi za procenu valjanosti modela - **test set**
 - Trening set i test set ne smeju imati/deliti zajednicke elemente tj. opservacije
 - Samo testiranjem modela na podacima koji nisu korisceni za ucenje mozemo izvesti adekvatnu estimaciju ocena valjanosti modela - generalizacija.
 - Opste prihvacena praksa je da se rasploziv skup podataka podeli na sledeci nacin:
@@ -379,13 +384,13 @@ conf_t
 
 # Formiramo TP, FN, FP i TN na osnovu "conf_t"
 
-TP <- conf_t[1,1]
+TP <- conf_t[2,2]
 
-FP <- conf_t[2,1]
+FP <- conf_t[1,2]
 
-FN <- conf_t[1,2]
+FN <- conf_t[2,1]
 
-TN <- conf_t[2,2]
+TN <- conf_t[1,1]
 
 
 # Tacnost (Accuracy)
@@ -423,7 +428,7 @@ set.seed(33)
 accs <- rep(0,9)
 
 
-# Treniramo model koristeci kros-validacione intervale vrednosti i vrsimo estimaciju tacnosti modela kao prosecne vrednosti tacnosti sracunatih unakrsnom validacijom
+# Treniramo model koristeci kros-validacione intervale vrednosti i vrsimo estimaciju tacnosti modela kao prosecne vrednost tacnosti sracunate unakrsnom validacijom
 for (i in 1:9) {
   # Ovi indeksi ukazuju na trenutni interval test seta koji koristimo za treniranje modela
     indices <- (((i - 1) * round((1/9)*nrow(shuffled))) + 1):((i*round((1/9) * nrow(shuffled))))
