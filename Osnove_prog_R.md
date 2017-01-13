@@ -49,7 +49,7 @@ TRUE == FALSE
 ```
 
 ```r
-"isto" == "isto" 
+"isto" == "isto"
 ```
 
 ```
@@ -101,7 +101,7 @@ TRUE != FALSE
 ```
 
 ```r
-"isto" != "isto" 
+"isto" != "isto"
 ```
 
 ```
@@ -163,7 +163,7 @@ TRUE > FALSE # TRUE = 1, FALSE = 0
 ```
 
 ***
-## <= i >= 
+## <= i >=
 
 
 ```r
@@ -451,13 +451,13 @@ Uslovni iskazi i grananje
 =============================================
 type: sub-section
 
-if 
+if
 =============================================
 
 `if(condition) {`
 
   `expr`
-  
+
   `}`
 
 
@@ -498,13 +498,13 @@ else
 x <- -3
 
 if(x < 0) {
-  
+
   print("x je negativan broj")
-  
+
   } else {
-    
+
   print("x je pozitivan broj ili nula")
-    
+
   }
 ```
 
@@ -529,13 +529,13 @@ else (nastavak)
 x <- 3
 
 if(x < 0) {
-  
+
   print("x je negativan broj")
-  
+
   } else {
-    
+
   print("x je pozitivan broj ili nula")
-    
+
   }
 ```
 
@@ -549,7 +549,7 @@ else if
 `if(condition1) {`
 
   `expr1`
-  
+
   `} else if(condition2) {`
 
   `expr2`
@@ -562,18 +562,18 @@ else if
 
 
 ```r
-x <- -3 
+x <- -3
 
 if(x < 0) {
-  
+
   print("x je negativan broj")
-  
+
   } else if(x == 0) {
-  
+
     print("x je nula")
-  
+
     } else {
-  
+
     print("x je pozitivan broj")
     }
 ```
@@ -588,7 +588,7 @@ else if (nastavak)
 `if(condition1) {`
 
   `expr1`
-  
+
   `} else if(condition2) {`
 
   `expr2`
@@ -601,18 +601,18 @@ else if (nastavak)
 
 
 ```r
-x <- 0 
+x <- 0
 
 if(x < 0) {
-  
+
   print("x je negativan broj")
-  
+
   } else if(x == 0) {
-  
+
     print("x je nula")
-  
+
     } else {
-  
+
     print("x je pozitivan broj")
     }
 ```
@@ -627,7 +627,7 @@ else if (nastavak)
 `if(condition1) {`
 
   `expr1`
-  
+
   `} else if(condition2) {`
 
   `expr2`
@@ -640,18 +640,18 @@ else if (nastavak)
 
 
 ```r
-x <- 3 
+x <- 3
 
 if(x < 0) {
-  
+
   print("x je negativan broj")
-  
+
   } else if(x == 0) {
-  
+
     print("x je nula")
-  
+
     } else {
-  
+
     print("x je pozitivan broj")
     }
 ```
@@ -668,9 +668,9 @@ if, else if, else
 if((x %% 2 == 0)&(x %% 3 == 0 )) {
 
   print("deljivo sa 2 i sa 3")
-  
+
   } else if (x %% 2 == 0) {
-  
+
     print("deljivo sa 2")
 
     } else if (x %% 3 == 0) {
@@ -678,9 +678,9 @@ if((x %% 2 == 0)&(x %% 3 == 0 )) {
       print("deljivo sa 3 ")
 
     } else {
-      
+
       print("nije deljivo ni sa 2 ni sa 3...")
-      
+
     }
 ```
 
@@ -695,9 +695,9 @@ if((x %% 2 == 0)&(x %% 3 == 0 )) {
 if((x %% 2 == 0)&(x %% 3 == 0 )) {
 
   print("deljivo sa 2 i sa 3")
-  
+
   } else if (x %% 2 == 0) {
-  
+
     print("deljivo sa 2")
 
     } else if (x %% 3 == 0) {
@@ -705,9 +705,9 @@ if((x %% 2 == 0)&(x %% 3 == 0 )) {
       print("deljivo sa 3 ")
 
     } else {
-      
+
       print("nije deljivo ni sa 2 ni sa 3...")
-      
+
     }
 ```
 
@@ -798,7 +798,7 @@ while(ctr <= 7) {
 
   if(ctr %% 5 == 0) { #ako je ovo tacno (TRUE) prekida se izvrsavanje petlje
 
-    break 
+    break
 
     }
 
@@ -820,16 +820,16 @@ while(ctr <= 7) {
 type: sub-section
 
 `for(var in seq) {`
-  
+
   `expr`
 
   `}`
-  
+
 'for' petlja
 =============================================
 
 `for(var in seq) {`
-  
+
   `expr`
 
   `}`
@@ -839,7 +839,7 @@ type: sub-section
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(grad in gradovi) {
-  
+
   print(grad)
 
 }
@@ -860,13 +860,13 @@ for(grad in gradovi) {
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(grad in gradovi) {
- 
+
    if(nchar(grad) == 6) { #ako tekuci string ima duzinu od 6 karaktera prekida se izvrsavanje petlje (u nasem slucaju to ce se desiti kada na red dodje "London")
 
      break
 
    }
-  
+
   print(grad)
 
 }
@@ -884,15 +884,15 @@ for(grad in gradovi) {
 
 ```r
 for(grad in gradovi) {
- 
+
    if(nchar(grad) == 6) { #ako tekuci string ima duzinu od 6 karaktera nece biti izvrsen kod u datoj iteraciji (u nasem slucaju to ce se desiti kada na red dodje "London")
 
      next
 
    }
-  
+
   print(grad)
-  
+
 }
 ```
 
@@ -915,7 +915,7 @@ for(grad in gradovi) {
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(grad in gradovi) {
-  
+
   print(grad)
 
 }
@@ -935,7 +935,7 @@ for(grad in gradovi) {
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(i in 1:length(gradovi)) {
-  
+
   print(gradovi[i])
 
 }
@@ -956,7 +956,7 @@ for(i in 1:length(gradovi)) {
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(i in 1:length(gradovi)) {
-  
+
   print(paste(gradovi[i], "je na poziciji", i, "u vektoru 'gradovi'."))
 
 }
@@ -983,7 +983,7 @@ Poredjenje: 'for' petlja v.1 vs v.2
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(grad in gradovi) {
-  
+
   print(grad)
 
 }
@@ -1007,7 +1007,7 @@ for(grad in gradovi) {
 gradovi <- c("Beograd", "New York", "Paris", "London", "Tokyo", "Prnjavor")
 
 for(i in 1:length(gradovi)) {
-  
+
   print(gradovi[i])
 
 }
@@ -1034,7 +1034,7 @@ type: sub-section
 ![Funkcija kao "crna kutija"](Black_box.jpg)
 ![sd](sd.jpg)
 
-Dokumentacija 
+Dokumentacija
 =======================================================
 
 - `help(sd)`
@@ -1057,12 +1057,12 @@ function (x, na.rm = FALSE)
 NULL
 ```
 - argumenti koji se prosledjuju f-ji `sd()` su vektor brojnih vrednosti `x` i `na.rm` koji ukazuje na to da li ce se vrsiti uklanjanje `NA` vrednosti prilikom racunajna standardne devijacije ili ne.
-  - Obratite paznju na to da argument `x` nema podrazumevanu vrednost, dok je `na.rm = FALSE` podrazumevano! 
+  - Obratite paznju na to da argument `x` nema podrazumevanu vrednost, dok je `na.rm = FALSE` podrazumevano!
 
 - Argumenti mogu da se prosledjuju na dva nacina:
   - po poziciji - "matching by position"
   - po imenu - "matching by name"
-  
+
 Agrumenti funkcije (2)
 ====================================================
 
@@ -1121,7 +1121,7 @@ Pisanje funkcija
 type: sub-section
 
 `ime_f-je <- function(arg1, arg2, ...) {`
-  
+
   `telo f-je`
 
 `}`
@@ -1131,7 +1131,7 @@ type: sub-section
 ```r
 # F-ja sum_abs() koja racuna sumu apsolutnih vrednosti dva broja
 sum_abs<-function(x,y){
-  
+
   abs(x)+abs(y)
 
   }
@@ -1144,14 +1144,14 @@ sum_abs(-2,3)
 [1] 5
 ```
 
-Funkcije bez ulaznih argumenata 
+Funkcije bez ulaznih argumenata
 =====================================================
 
 **Primer:**
 
 ```r
 baci_kockicu <- function() {
-  
+
   broj <- sample(1:6, size = 1)
   broj
 }
@@ -1160,29 +1160,29 @@ baci_kockicu()
 ```
 
 ```
-[1] 5
+[1] 3
 ```
 
 Ulazni arumenti sa podrazumevanom vrednoscu
 =======================================================
 
 ` ime_f <- function(arg1, arg2 = val2) {`
-  
+
   `body`
-  
+
 `}`
 ***
 
 ```r
 kv_info <- function(x, print_info = TRUE) {
-  
+
   y <- x ^ 2
-  
+
   if (print_info) {
-  
+
       print(paste(x, "na kvadrat daje", y))
   }
-  
+
   return(y)
 }
 
@@ -1234,7 +1234,7 @@ kv(4)
 ```
 ***
 - `y` je definisano unutar funkcije `kv()` te s' toga nije dostupno van prostora promenljivih same funkcije.
-- Vrednost argumenta`x` takodje nije dostupna van prostora promenljivih same funkcije `kv()`. 
+- Vrednost argumenta`x` takodje nije dostupna van prostora promenljivih same funkcije `kv()`.
 
 R prosledjuje argumente po vrednosti (passing by value)
 =========================================================
@@ -1269,8 +1269,8 @@ Passing by value - vezba
 Koja je od sledecih izjava *netacna* vezano za prikazani blok koda:
 
 1. 'a' i 'b' su jednaki 7 i 6, respektivno, nakon izvrsenja ovog koda.
-2. Nakon prvog pozivanja f-je `increment()`, u kome je vrednost `a` definisana, `a` je jednako 7 dok `count` ima vrednost 5. 
-3. Po izvrsenju celog bloka `count` ce imati vrednost 10. 
+2. Nakon prvog pozivanja f-je `increment()`, u kome je vrednost `a` definisana, `a` je jednako 7 dok `count` ima vrednost 5.
+3. Po izvrsenju celog bloka `count` ce imati vrednost 10.
 4. U poslednjoj liniji koda vrednost promenljive `count` je izmenjena jer je izvresena eksplicitna dodela vrednosti.
 
 ***
@@ -1292,7 +1292,7 @@ Pisanje funkcija u R-u - Zadatak za vezbanje 1
 - Formirajte "data frame" `pritisak` koji sadrzi kolone `pritisak_sist` i `pritisak_dijast` u kojima se nalaze vrednosti odgovarajucih parametara tj. sistolnog i dijastolnog krvnog pritiska za pojedinacne pacijente. Unesite vrednosti za 10 pacijenata.
 
 - Dovrsite zapocetu funkciju `interpret` koja daje odgovarajuci odziv u zavisnosti od vrednosti ovih parametara:
-  - funkcija ima dva argumenta `prit_s` i `prit_d` koji se odnose na sistolni i dijastolni krvni pritisak za konkretnog pacijenta. 
+  - funkcija ima dva argumenta `prit_s` i `prit_d` koji se odnose na sistolni i dijastolni krvni pritisak za konkretnog pacijenta.
   - Ako je vrednost `prit_s` veca od 120 f-ja a manja od 190 ispisuje poruku "Povisen gornji pritisak!", ako je `prit_d` veca od 80 i manja od 100 fja ispisuje poruku "Povisen donji pritisak!", ako je `prit_s` manji od 120 i veci od 90 ispisuje poruku "Normalan gornji pritisak.", ako je `prit_d` manji od 80 i veci od 60 ispisuje poruku "Normalan donji pritisak", ako `prit_s` ima vrednost izmedju 70 i 90 ispisuje "Nizak gornji pritisak!", ako `prit_d` ima vrednost u rasponu 40-60 ispisuje "Nizak donji pritisak!", a ako nijedan od ovih uslova nije zadovoljen ispisuje poruku "Svaka cast!".
 - Pozovite ovu funkciju dva puta, prvi put za pacijenta br.1 drugi put za pacijenta br.5.
 
@@ -1302,17 +1302,17 @@ Pisanje funkcija u R-u - Zadatak za vezbanje 1
 
 ```r
 interpret <- function(prit_s, prit_d) {
-  
-  if (prit_s > 120 & prit_s < 190) { 
+
+  if (prit_s > 120 & prit_s < 190) {
     print("Povisen gornji pritisak!")
-    
+
   } else if (prit_s < 120 & prit_s > 90){
       print("Normalan gornji pritisak!")
   } else if (){
       ...
     }
 ...
-  
+
 }
 ```
 Pisanje funkcija u R-u - Zadatak za vezbanje 2
@@ -1328,14 +1328,14 @@ Pisanje funkcija u R-u - Zadatak za vezbanje 2
 
 ```r
 interpret_sum <- function(prit_s, prit_d, ______) {
-  
+
   dijagnoza <- list(prit_sis = "", prit_dijast = "")
-  
+
   for( i in 1:length(prit_s)){
-  
-    if (prit_s > 120 & prit_s < 190) { 
+
+    if (prit_s > 120 & prit_s < 190) {
     dijagnoza_prit_sis[i] <- ("Povisen gornji pritisak!")
-    
+
   } else if (prit_s < 120 & prit_s > 90){
       ...
   } else if (){
@@ -1344,17 +1344,17 @@ interpret_sum <- function(prit_s, prit_d, ______) {
   }
 ...
   if(______){
-    
+
     sum_g = 0
     ...
-    
+
     for(i in prit_s > 120){
       sum_g <- sum_g + 1
     }
-    ... 
+    ...
      paste("Broj pacijenata sa povisenim sistolnim pritiskom je:", sum_g)
      ...
-     
+
   }
 }
 ```
@@ -1433,7 +1433,7 @@ gradovi <- c("New York", "Paris", "London", "Tokyo","Beograd", "Rio de Janeiro",
 # Resenje koriscenjem 'for' petlje
 num_chars <- c()
 
-for(i in 1:length(gradovi)) { 
+for(i in 1:length(gradovi)) {
   num_chars[i] <- nchar(gradovi[i])
   }
 num_chars

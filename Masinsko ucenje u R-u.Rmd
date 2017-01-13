@@ -2,7 +2,10 @@
 title: "Masinsko ucenje u R-u"
 author: "Igor Hut"
 date: "December 5, 2016"
-output: html_document
+output: 
+  html_document: 
+    toc: yes
+    toc_depth: 4
 ---
 
 ```{r setup, include=FALSE}
@@ -43,9 +46,9 @@ ggplot(iris, aes( x = Sepal.Width, y = Sepal.Length, col = Species)) +
 
 ```
 
-## Regresija, klasifikacija, klasterizacija
+## Regresija, klasifikacija, klasterizacija - Uvod 
 
-**Linearna regresija - uvodni primer 1**
+#### Linearna regresija - uvodni primer 1
 
 ```{r}
 
@@ -67,7 +70,7 @@ unseen <- data.frame(age = 60)
 # Na osnovu modela "lm_wage" predvidjamo koliko iznosi plata 60-togodisnjeg radnika
 predict(lm_wage, unseen)
 ```
-**Regresija - uvodni primer 2**
+#### Regresija - uvodni primer 2
 
 ```{r}
 
@@ -90,7 +93,7 @@ plot(linkedin ~ dani, xlim = c(1, 24))
 points(22:24, linkedin_pred, col = "red", pch = 16)
 ```
 
-**Klasifikacija - uvodni primer** 
+#### Klasifikacija - uvodni primer
 
 Primer neadekvatnog klasifikatora - krajnje overfitovanje podataka iz trening seta!
 
@@ -125,7 +128,7 @@ spam_pred == emails$spam
 identical(spam_pred, as.numeric(emails$spam))
 ```
 
-**Klasterovanje - uvodni primer**
+#### Klasterovanje - uvodni primer
 
 ```{r}
 # Da bi smo obezbedili reproduktibilnost
@@ -153,11 +156,12 @@ plot(Petal.Length ~ Petal.Width, data = my_iris, col = iris$Species)
 title("Istinske klase")
 
 ```
+
 ## Ocena modela
 
 ### Konfuziona matrica - Primeri
 
-**Primer 1:**
+#### Primer 1:
 
 ```{r}
 
@@ -203,7 +207,7 @@ conf_t
 
 ```
 
-**Primer 2:**
+#### Primer 2:
 ```{r}
 #Isto to sa "pima" bazom podataka
 library(faraway)
@@ -260,7 +264,7 @@ spec <- TN/(TN + FP)
 spec
 ```
 
-**Zadatak za vezbanje na casu:**
+#### Zadatak za vezbanje na casu:
 Izracunajte ove vrednosti za "tree" model generisan na osnovu "pima" seta podataka.
 
 ### Kvalitet regresije
@@ -269,7 +273,7 @@ Izracunajte ove vrednosti za "tree" model generisan na osnovu "pima" seta podata
 - U nasem slucaju mozemo smatrati da se poklapa sa standardnom devijacijom
 - `sqrt((1/nrow(truth)) * sum( (truth$col - pred)^2))`
 
-**Primer:**
+#### Primer:
 
 ```{r}
 # Koristicemo "pima" bazu
@@ -411,7 +415,7 @@ spec <- TN/(TN + FP)
 spec
 ```
 
-**Zadatak za vezbanje na casu:**
+#### Zadatak za vezbanje na casu:
 Ponovite pokazanu proceduru koristeci "pima" skup podataka.
 
 ### Upotreba unakrsne validacije (cross-validation)
@@ -533,3 +537,140 @@ conf_full <- table(emails_full$spam, spam_classifier(emails_full$avg_capital_seq
 acc_full <- sum(diag(conf_full)) / sum(conf_full)
 acc_full
 ```
+
+## Regresija
+
+### Prosta linearna regresija
+
+#### Koriscenje funkcije `lm()` - Primeri
+
+**Primer 1:**
+
+U ovom primeru cemo koristiti set podataka "Boston" iz paketa `MASS`. Ovaj set podataka sadrzi podatke o trzisnoj vrednosti nekretnina u predgradjima Bostona, SAD, zajedno sa razlicitim parametrima koji uticu na formiranje ove vrednosti.
+```{r}
+library(MASS)
+library(ISLR)
+library(ggplot2)
+
+?Boston
+str(Boston)
+head(Boston)
+
+# Proverimo kako izgleda promena "medv" (median value of owner-occupied homes in \$1000s) sa
+# "lstat" (lower status of the population (percent)
+plot(medv~lstat,Boston)
+
+# Kao sto vidimo postoji jasan trend opadanja vrednosti nekretnina sa porastom procenta
+# siromasnijih stanovnika (ovakva korelacija je naravno i ocekivana). Ovakvi slucajevi su dobri
+# kandidati za modelovanje prostom linerarnom regresijom.
+
+fit_1 = lm(medv ~ lstat, data = Boston)
+
+# Hajde da vidimo kako izgleda nas model
+fit_1
+
+# Detaljniji uvid
+summary(fit_1)
+
+# Sta sve model sadrzi
+names(fit_1)
+
+# Samo koeficijenti
+fit_1$coefficients
+
+# Ucrtajmo regresionu pravu na pocetni scatter plot
+abline(fit_1$coefficients, col = "red", lwd = 2)
+
+# Ili sve zajedno koristerci "ggplot2"
+ggplot(Boston, aes( x = lstat, y = medv)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE, colour = "red")
+
+# Ako zelimo i interval pouzdanosti sam izostavimo parametar "se" (podrazumevano se = TRUE)
+ggplot(Boston, aes( x = lstat, y = medv)) +
+    geom_point() +
+    geom_smooth(method = "lm")
+
+
+# Interval pouzdanosti
+confint(fit_1)
+
+# Da predvidimo vrednosti "medv" za dati vektor vrednosti "lstat" promenljive, uz
+# proracun intervala pouzdanosti
+predict(fit_1,data.frame(lstat = c(5,10,15)),interval = "confidence")
+
+```
+
+### Multivarijabilna linearna regresija
+
+#### Primer 1
+
+```{r}
+library(readr)
+library(tidyr)
+library(purrr)
+library(ggpubr)
+
+# Uvoz i sredjivanje podataka
+shop_data <- read_csv("data/shop_data.csv") 
+shop_data <- separate(shop_data, '"sales","sq_ft","inv","ads","size_dist","comp"', 
+                      c("sales","sq_ft","inv","ads","size_dist","comp"), sep = ",")
+shop_data <- as.data.frame(map(shop_data, as.numeric))
+
+str(shop_data)
+head(shop_data)
+
+# Hajde da proverimo kako se podaci ponasaju i mogu li se uociti relacije
+# izmedju distribucija promenljivih koje bi ukazivale na opravdanost uvodjenja
+# linearnog modela:
+
+par(mfrow = c(2,3))
+plot(sales ~ ads, shop_data)
+plot(sales ~ sq_ft, shop_data)
+plot(sales ~ size_dist, shop_data)
+plot(sales ~ inv, shop_data)
+plot(sales ~ comp, shop_data)
+
+#Ili:
+pairs(shop_data)
+
+# Linearni model za "sales" koji ukjucuje sve prediktore (sve preostale promenljive)
+lm_shop_1 <- lm( sales ~., data = shop_data)
+
+# Proverimo parametre valjanosti modela i koliko su pojedini prediktori znacajni u modelu:
+summary(lm_shop_1)
+
+# Da bismo uopste mogli da koristimo p-vrednosti u ovom kontekstu treba prvo da proverimo 
+# da li je zadovoljena pretpostavka o normalnoj distribuciji reziduala!
+
+par(mfrow = c(1,2))
+# Plotujemo reziduale u funkciji fitovanih vrednosti za pojedinacje opservacije
+plot(lm_shop_1$fitted.values, lm_shop_1$residuals)
+abline(0,0, col = "red", lty = 2)
+
+# Napravimo  Q-Q plot kvantila reziduala
+qqnorm(lm_shop_1$residuals, ylab = "Residual Quantiles")
+qqline(lm_shop_1$residuals, col = "red")
+
+par(mfrow = c(1,1))
+
+# Mozemo i da upotrebimo f-ju "ggqqplot" iz paketa "ggpubr" koji sadrzi funkcije za 
+# plotovanje "lepih" grafika:
+
+ggqqplot(lm_shop_1$residuals, ylab = "Residual Quantiles")
+
+# Me moze se uociti nikakav jasan "pattern" u distribucij reziduala, sta vise kvantili 
+# reziduala su uglavnom na liniji koja odgovara teorijskoj - normalnoj distribuciji 
+
+# Proverimo ponovo summary
+summary(lm_shop_1)
+
+# Iskoristimo sada dobijeni model da predvidimo neto prodajnu vrednost na osnovu novog
+# skupa prediktora:
+shop_new = data.frame("sq_ft" = 2.3, "inv" = 420, "ads" = 8.7, 
+                      "size_dist" = 9.1, "comp" = 10)
+predict(lm_shop_1, shop_new)
+
+```
+#### Primer 2
+

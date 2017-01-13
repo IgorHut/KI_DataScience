@@ -1,0 +1,34 @@
+---
+title: "Prvi kolokvijum iz Klinickog Inzenjerstva - Popravni"
+author: "Zadao Igor Hut"
+date: '13.01.2017. '
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Napomene
+
+*Odgovori na pitanja i zadatke, tj. odgovarajuci R kod, treba da budu smesteni u R skript ciji se naziv formira po modelu **ime_prezime.R**.*
+*Skup podataka koji ce se obradjivati je `"esoph"`. Ovaj set podatak se nalazi u osnovnoj instalaciji R tako da je podrazumevano dostupan. Set sadrzi podatke prikupljene tokom studije slucaja vezane za rak jednjaka (ezofagealni karcinom, karcinom ezofagusa) u Francuskoj.*
+*Preporucljivo je da za manipulaciju podacima koristite funkcije iz paketa `dplyr` a za iscrtavanje grafika funkcije iz paketa `ggplot2`.*
+
+## Zadaci i pitanja
+
+1. 
+    a. Obavestite se o sadrzaju seta podataka: `help("esoph")` ili `?esoph` 
+Koristeci odgovarajuce naredbe proverite strukturu seta podataka, sadrzaj 6 prvih vrsta kao i 6 poslednjih vrsta.
+    b. Ispisite sumarnu statistiku za dati skup podataka.
+2. Kolika je verovatnoca, u okviru datog skupa podataka (uzorka), da posmatrani subjekt ima karcinom a kolika da nema? (*Napomena: termin "case" se odnosi na prisustvo karcinoma a "control" na kontrolni subjekat koji nema karcinom*)
+3.  
+    a. Kolika je verovatnoca da je subjekt koji konzumira vise od 39g alkohola na dan ili vise od 30g duvana na dan oboleo od karcinoma?
+    b. Koja je verovatnoca da subjekt konzumira vise od 119g alkohola na dan?
+4. Iscrtati histograme broja obolelih pacijenata u zavisnosti od njihovog godista. 
+5. Iscrtati histograme broja obolelih pacijenata u zavisnosti od kolicine konzumiranog alkohola. 
+
+
