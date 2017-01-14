@@ -2,8 +2,11 @@
 title: "Masinsko ucenje u R-u"
 author: "Igor Hut"
 date: "December 5, 2016"
-output: 
-  html_document: 
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  html_document:
     toc: yes
     toc_depth: 4
 ---
@@ -673,4 +676,24 @@ predict(lm_shop_1, shop_new)
 
 ```
 #### Primer 2
+
+Za ovaj primer cemo ponovo koristiti set podataka "Boston" iz paketa `MASS`.
+```{r}
+# Linearni model za "medv" na osnovu dva prediktora: "lstat" i "age"
+fit2 = lm(medv ~ lstat + age, data = Boston)
+summary(fit2)
+
+#Linearni model za "medv" na osnovu svih raspolozivih prediktora
+fit3 = lm(medv ~.,Boston)
+summary(fit3)
+
+# Jos jedan nacin da se iscraju grafici koji se koriste za procenu valjanosti i opravdanosti linearnog modela
+par(mfrow = c(2,2))
+plot(fit3)
+
+# Na osnovu "summary" za model fit3 videli smo da promenljive "indus" i "age" ne igraju bitnu ulogu, te cemo update-vati model tako da ih ne uzim u obzir: 
+fit4 = update(fit3,~.-age-indus)
+summary(fit4)
+
+```
 
