@@ -3,8 +3,8 @@ title: "Prvi kolokvijum iz Klinickog Inzenjerstva - Popravni"
 author: "Zadao Igor Hut"
 date: '13.01.2017. '
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 
@@ -28,7 +28,7 @@ Koristeci odgovarajuce naredbe proverite strukturu seta podataka, sadrzaj 6 prvi
 3.  
     a. Kolika je verovatnoca da je subjekt koji konzumira vise od 39g alkohola na dan ili vise od 30g duvana na dan oboleo od karcinoma?
     b. Koja je verovatnoca da subjekt konzumira vise od 119g alkohola na dan?
-4. Iscrtati histograme broja obolelih pacijenata u zavisnosti od njihovog godista. 
-5. Iscrtati histograme broja obolelih pacijenata u zavisnosti od kolicine konzumiranog alkohola. 
+4. Iscrtati histogram broja obolelih pacijenata u zavisnosti od njihovog godista. 
+5. Iscrtati histogram broja obolelih pacijenata u zavisnosti od kolicine konzumiranog alkohola. 
 
 

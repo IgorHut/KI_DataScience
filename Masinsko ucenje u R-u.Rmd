@@ -164,6 +164,9 @@ title("Istinske klase")
 
 ### Konfuziona matrica - Primeri
 
+- Objasnicemo ocenu klasifikacionog modela (u ovom slucaju korisceno je stablo odlucivanja - Decision Tree), na osnovu matrice konfuzije, koristeci za primer  `titanic` set podataka u kome se nalaze podaci o putnicima na Titaniku.
+    - Verzija koju cemo mi koristiti moze da se preuzme sa Kaggle stranice: [Titanic: Machine Learning from Disaster](https://www.kaggle.com/c/titanic/data)
+
 #### Primer 1:
 
 ```{r}
@@ -194,7 +197,7 @@ str(titanic)
 
 table(titanic$survived)
 
-# Odnos prezivelih i poginulih
+# Odnos broja prezivelih i poginulih
 prop.table(table(titanic$survived))
 
 # Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu datih podataka:
@@ -541,7 +544,11 @@ acc_full <- sum(diag(conf_full)) / sum(conf_full)
 acc_full
 ```
 
-## Regresija
+## Linearna regresija
+
+- "Jednostavan" pristup problemu "nadgledanog" ucenja.
+- **Osnovna prepostavka:** Zavisno promenljiva $Y$ se moze izracunati kao linearna funkcija nezavisno promenljivih $X_1, X_2, ..., X_p$.
+- Literatura: [Regression Models for Data Science in R]( http://leanpub.com/regmods)
 
 ### Prosta linearna regresija
 
@@ -691,9 +698,117 @@ summary(fit3)
 par(mfrow = c(2,2))
 plot(fit3)
 
-# Na osnovu "summary" za model fit3 videli smo da promenljive "indus" i "age" ne igraju bitnu ulogu, te cemo update-vati model tako da ih ne uzim u obzir: 
+# Na osnovu "summary" za model fit3 videli smo da promenljive "indus" i "age" ne igraju bitnu ulogu, te cemo update-vati model tako da ih ne uzima u obzir: 
 fit4 = update(fit3,~.-age-indus)
 summary(fit4)
 
 ```
 
+## Nelinearna regresija
+
+### Polinomijalna regresija
+- Ovaj segment ce biti dopunjen u buducnosti
+
+### KNN (K-Nearest Neighbors) u regresionoj analizi
+- Ovaj segment ce biti dopunjen u buducnosti 
+
+### Stablo odlucivanja (Decision Tree), Random Forest i  za regresiju
+#### Uvod
+- Ovaj segment ce biti dopunjen u buducnosti
+
+#### Primer 1
+
+```{r}
+
+```
+
+
+## Klasifikacija
+
+- Za razliku od regresionog modela, koji koristimo kako bismo predvideli neku vrednost iz kontiunualnog skupa brojnih vrednosti, klasifikacioni model odn. algoritam koristimo da predvidimo klasu odn., uslovno receno, vrednost iz nekog diskretnog skupa tj. kategoricku promenljivu.
+- Ne primer: **objekat_na_slici $\in$ {"automobil", "bicikl", "avion"}** ili **email $\in$ {"spam", "ham"}**
+- U ovom slucaju nas zadatak je da na osnovu vektora prediktora $X$ i vektora odziva $Y$ koji sadrzi kvalitativne tj. kategoricke vrednosti iz skupa $C$ generisemo funkciju $C(X)$ (trening, odn. ucenje algoritma) koja kao ulaz prima novi (onaj koji nije koriscen u treningu) vektor prediktora $X$ a kao odziv daje vrednosti (vrsi predvidjanje) za $Y$, $C(X) \in C$.
+- Neretko nas interesuje procena verovatnoce da $X$ pripada nekoj od kategorija iz $C$.
+
+### Logisticka regresija
+
+*Bice dodato naknadno.*
+
+### Stablo odlucivanja - Decision Tree
+
+- Metode ovog tipa pocivaju na principima stratifikacije i segmentacije prediktorskog hiperprostora u veci broj manjih, prostih, regiona.
+- Istorijski gledano prva dva algoritma ovog tipa su: 
+    - **CART** (Classification And Regression Tree),  Leo Breiman et al.
+    - **ID3** (Iterative Dichotomiser 3), Ross Quinlan
+- Stablo odlucivanja je algoritam jednostavan za upotrebu i interpretaciju rezultata, medjutim sklon je overfit-ovanju i uglavnom ne postize tacnost uporedivu sa nekim modernijim algoritmima.
+- Metode kao sto su *bagging, random forest i boosting* koje se baziraju na iterativnoj agregaciji pojedinacnih stabala odlucivanja obezbedjuju znacajno bolje performanse ali po cenu interpretabilnosti rezultata.
+- Objasnicemo primenu stabla odlucivanja za klasifikaciju na primeru, koristeci dobro poznati `titanic` set podataka koji smo, prethodno, vec uvezli i adekvatno modifikovali za potrebe nase analize i modelovanja.
+- DataCamp-ov tutorial: [Kaggle R Tutorial on Machine Learning](https://www.datacamp.com/community/open-courses/kaggle-tutorial-on-machine-learing-the-sinking-of-the-titanic?utm_campaign=kaggle-ml-launch&utm_medium=blog&utm_source=kaggle-ml-launch#gs.KhzfU64)
+
+```{r}
+
+# Ucitajmo prvo pakete koji ce biti korisceni u ovom primeru
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+
+
+# Da se podsetimo kako izgleda skup podataka koji cemo koristiti u ovom
+# primeru:
+str(titanic)
+
+# Odnos broja prezivelih i poginulih: "0" - nije preziveo/la; "1" - preziveo/la
+table(titanic$survived)
+prop.table(table(titanic$survived))
+
+# Da obezbedimo reproduktibilnost
+set.seed(333)
+
+# Za potrebe ovog primera cemo na osnovu "titanic" data set-a formirati
+# "train" i "test" set podataka koje cemo, respektivno, koristiti za trening naseg 
+# klasifikacionog algoritma (Decision Tree) i njegovo testiranje. 
+# Podelu cemo izvrsiti tako da "train" set sadrzi 75% podataka, 
+# a "test" preostalih 25%. 
+train_ind <- sample(1:nrow(titanic), round(0.75*(nrow(titanic))))
+train <- titanic[train_ind, ]
+test <- titanic[-train_ind, ]
+
+# Proverimo da li "train" i "test" data set izgledaju kako bi trebalo
+str(train)
+str(test)
+
+# Proverimo da li je zastupljenost klasa u trening setu dobro reprezentovana, tj. 
+# da li se poklapa onom u polaznom setu podataka ("titanic").
+prop.table(table(train$survived))
+
+# Generisemo klasifikacioni model (drvo odlucivanja - decision tree) na osnovu datih podataka, tj. vrsimo trening naseg modela:
+tree <- rpart(survived ~ ., data = train, method = "class")
+
+# Hajde da vidimo kako nase stablo odlucivanja izgleda
+prp(tree)
+
+# Korisniji i lepsi dijagram
+fancyRpartPlot(tree)
+
+# Koristimo predict() funkciju da predvidimo klase na osnovu podataka iz 
+# "test" data set-a
+pred <- predict(tree, newdata = test, type = "class")
+
+# Provera tacnosti predvidjanaja na "test" setu
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(test$survived, pred)
+
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+```
+Kao sto se moze videti, procenjena tacnost ovako dobijenog modela, na test setu, je nesto preko 80%, sto se, u ovom konkretnom slucaju, smatra solidnim rezultatom.
+
+
+
+
+### Random Forest
+
+### KNN (K-Nearest Neighbors) za klasifikaciju
+*Bice dodato naknadno.*
