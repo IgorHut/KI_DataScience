@@ -712,15 +712,9 @@ summary(fit4)
 ### KNN (K-Nearest Neighbors) u regresionoj analizi
 - Ovaj segment ce biti dopunjen u buducnosti 
 
-### Stablo odlucivanja (Decision Tree), Random Forest i  za regresiju
+### Stablo odlucivanja (Decision Tree), Random Forest i Boosting za regresiju
 #### Uvod
 - Ovaj segment ce biti dopunjen u buducnosti
-
-#### Primer 1
-
-```{r}
-
-```
 
 
 ## Klasifikacija
@@ -805,10 +799,234 @@ sum(diag(conf))/sum(conf)
 ```
 Kao sto se moze videti, procenjena tacnost ovako dobijenog modela, na test setu, je nesto preko 80%, sto se, u ovom konkretnom slucaju, smatra solidnim rezultatom.
 
+Demonstracije radi, u nastavku cemo pokazati kako se kontrolise kompleksnost modela podesavanjem parametra `cp`. Uprosceno receno, ovaj parametar odredjuje koji ce cvorovi (nodes) biti uklonjeni iz finalnog modela, jer ne doprinose, u dovoljnoj meri, razdvajanju klasa.
+Generalno govoreci, podrazumevano ponasanje `rpart` algoritma je u prilicnoj meri optimalno u pogledu odabira modela odgovarajuce kompleksnosti.
+Prilikom formiranja modela treba imati na umu da su kompleksniji modeli skloniji overfit-ovanju podataka! Ovo naravno ne znaci da prostiji model obavezno obezbedjuje bolju generalizaciju, tj. bolju klasifikaciju (sa vecom tacnoscu) podataka koji nisu korisceni tokom treninga.
+
+```{r}
+
+#Prvo cemo generisati nepotrebno kompleksan model
+complex_tree <- rpart(survived ~ ., train, method = "class", 
+                      control = rpart.control(cp = 0.00001))
+
+fancyRpartPlot(complex_tree)
+
+
+# Provera tacnosti predvidjanja na "trening" setu
+# Prvo vrsimo estimaciju klasa u training setu na osnovu modela "complex_tree"
+pred <- predict(complex_tree, train, type = "class")
+
+
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(train$survived, pred)
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+# Proverimo tacnost ovako dobijenog modela na test setu.
+# Prvo vrsimo estimaciju klasa u test setu na osnovu modela "complex_tree"
+pred <- predict(complex_tree, newdata = test, type = "class")
+
+# Provera tacnosti predvidjanaja na "test" setu
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(test$survived, pred)
+
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+# Sada cemo ovom slozenum drvetu "skresati" grane
+pruned <- prune(complex_tree, cp = 0.01)
+fancyRpartPlot(pruned)
+
+# Proverimo sada za model "pruned" kako stojimo sa tacnoscu
+# Provera tacnosti predvidjanja na "trening" setu
+# Prvo vrsimo estimaciju klasa u training setu na osnovu modela "pruned"
+pred <- predict(pruned, train, type = "class")
+
+
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(train$survived, pred)
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+# Proverimo tacnost ovako dobijenog modela na test setu.
+
+# Prvo vrsimo estimaciju klasa u test setu na osnovu modela "pruned"
+pred <- predict(pruned, newdata = test, type = "class")
+
+# Provera tacnosti predvidjanaja na "test" setu
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(test$survived, pred)
+
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+
+```
+
+Kao sto se moze videti, na osnovu rezultata, prostiji model obezbedjuje bolju generalizaciju. Na ovo ukazuje manja razlika u procenjenoj tacnosti klasifikacije na *test* i *trening* setu podataka.
+
+### Jos o proceni valjanosti modela za binarnu klasifikaciju: ROC (Receiver Operator Characteristic) krive
+
+- Izuzetno mocan alat za procenu perfomansi binarnog klasifikatora
+- Receiver Operator Characteristic Curve - ROCC
+- Graficki prikaz promene odnosa True Positive Rate (Recall) vs False Positive Rate,
+sa promenom vrednosnog praga (treshold) za verovatnocu na osnovu koga se odredjuje pripadanost jednoj od dve klase.
+- AUC (Area Under the Curve) > 0.9 - dobar klasifikator
+- R paketi koji se mogu koristiti za ROC analizu: "ROCR" i "pROC"
+
+####Primer 
+
+```{r}
+library(ROCR)
+
+# Generisanje ROC krive nam trebaju verovatnoce - type = "prob"
+probs <- predict(tree, test, type = "prob")[,2]
+
+# Generisemo "prediction" objeka: pred
+pred <- prediction(probs, test$survived)
+
+# Generisemo "performance" objekat: perf
+perf <- performance(pred, "tpr", "fpr")
+
+# Crtamo ROC krivu
+plot(perf)
+
+#Ili
+df <- data.frame(x = perf@x.values[[1]], y = perf@y.values[[1]])
+ggplot(df, aes(x,y)) +
+  geom_line(color = "steelblue") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "darkred")
+
+# Hajde da vidimo kolika je tacno povrsina ispod krive - AUC
+# Ponovo generisemo adekvatan "performance"" objekat: perf
+perf <- performance(pred, "auc")
+
+# Ispisujemo vrednost za AUC
+perf@y.values[[1]]
+```
+
+
 
 
 
 ### Random Forest
+
+Krajnje uprosceno, **Random Forest** algoritam radi po sledecem principu: generise se veliki broj razgranatih stabala odlucivanja, koja se zatim "uprosecuju" kako bi se smanjila varijansa i izbeglo over fit-ovanje. 
+
+#### Primer 1
+```{r}
+library(randomForest)
+
+
+# Da obezbedimo reproduktibilnost
+set.seed(333)
+
+# Za potrebe ovog primera cemo na osnovu "titanic" data set-a formirati
+# "train" i "test" set podataka koje cemo, respektivno, koristiti za trening naseg 
+# klasifikacionog algoritma (Decision Tree) i njegovo testiranje. 
+# Podelu cemo izvrsiti tako da "train" set sadrzi 75% podataka, 
+# a "test" preostalih 25%. 
+train_ind <- sample(1:nrow(titanic), round(0.75*(nrow(titanic))))
+train <- titanic[train_ind, ]
+test <- titanic[-train_ind, ]
+
+# Proverimo da li "train" i "test" data set izgledaju kako bi trebalo
+str(train)
+str(test)
+
+# Proverimo da li "train" i "test" sadrze NA vrednosti. Ako ih ima one se moraju ili 
+# imutirati na adekvatan nacin, ili se opservacije koje ih sadrze brisu, pre primene
+# "randomForest" funkcije.
+
+# Zamena NA vrednosti odgovarajucim brojnim vrdnostima upotrebom "rfImpute" funkcije.
+titanic_imputed <- rfImpute(survived ~ ., train)
+
+# "Treniranje" RF modela
+titanic_rf <- randomForest(survived ~ ., titanic_imputed, importance = TRUE, ntree = 1000)
+
+# Osnovni podaci o modelu
+titanic_rf
+
+# Vaznost pojedinacnih prediktora u izgradnju modela
+varImpPlot(titanic_rf)
+
+# Proverimo sada za model "titanic_rf" kako stojimo sa tacnoscu
+# Provera tacnosti predvidjanja na "trening" setu
+# Prvo vrsimo estimaciju klasa u training setu na osnovu modela "titanic_rf"
+pred <- predict(titanic_rf, train, type = "class")
+
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(train$survived, pred)
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+# Proverimo tacnost ovako dobijenog modela na test setu.
+
+# Prvo vrsimo estimaciju klasa u test setu na osnovu modela "titanic_rf"
+pred <- predict(titanic_rf, newdata = test, type = "class")
+
+# Provera tacnosti predvidjanaja na "test" setu
+# Konstruisemo konfuzionu matricu: conf
+conf <- table(test$survived, pred)
+
+# Racunamo tacnost
+sum(diag(conf))/sum(conf)
+
+```
+
+#### Primer 2
+
+Za ovaj primer cemo koristiti vec posnati set podataka "Boston" iz `MASS` paketa. Ovaj set podataka sadrzi podatke o trzisnoj vrednosti nekretnina u predgradjima Bostona, SAD, zajedno sa razlicitim parametrima koji uticu na formiranje ove vrednosti.
+Sa obzirom da nas interesuje problem klasifikacije za pocetak cemo prevesti numericku promenljivu "medv" u kategoricku promenljivu sa tri nivoa koje cemo oznaciti sa "cheap", "average", "expensive".
+Dakle za razliku od prethodnog slucaja binarne klasifikacije (dve klase) ovde cemo imati tri klase.
+
+```{r}
+
+summary(Boston)
+boxplot(Boston$medv)
+
+# Prevodimo "medv" u kategoricku promenljivu sa tri nivoa koje cemo oznaciti sa
+# "cheap", "average", "expensive".
+Boston$medv <- cut(Boston$medv, c(0,18,35,50), labels = c("cheap", "average", "expensive"))
+
+summary(Boston$medv)
+
+train <- sample(1:nrow(Boston), 300)
+
+rf_boston <-  randomForest( medv ~., data = Boston, subset = train, importance = TRUE)
+rf_boston
+
+# Koliko je koja od promenljivih bitna za tacnost klasifikacije? 
+importance(rf_boston)
+varImpPlot(rf_boston)
+
+```
+
+
+### Boosting
+
+Ponovo, krajnje uprosceno, **Boosting** algoritam generise veliki broj malih (plitkih) stabala odlucivanja koja se inkrementalno pridodaju u cilju povecanja tacnosti odn. boljeg razdvajanja klasa.
+
+U primeru koji sledi cemo koristiti paket **`gbm`** (Generalized Boosted Regression Models) i set podataka "Boston" koji je vec modifikovan na odgovarajuci nacin, za resavanje problema klasifikacije, u prethodnom primeru koji se odnosio na primenu "Random Forest" algoritma.
+
+#### Primer 
+
+```{r}
+library(gbm)
+
+# Trening modela
+boost_boston <- gbm(medv ~ ., 
+                    data = Boston[train,],
+                    n.trees = 5000,
+                    shrinkage = 0.01, 
+                    interaction.depth = 3)
+
+boost_boston
+
+# Koliko je koja od promenljivih bitna za tacnost klasifikacije?  
+summary(boost_boston)
+
+```
 
 ### KNN (K-Nearest Neighbors) za klasifikaciju
 *Bice dodato naknadno.*
